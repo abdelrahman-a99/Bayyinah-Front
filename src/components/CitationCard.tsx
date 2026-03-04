@@ -81,7 +81,7 @@ export function CitationCard({
               ))}
             </div>
           ) : usedSources?.length > 0 ? (
-            <ul className="list-disc leading-loose pl-0 pr-4 list-inside space-y-1 text-muted-foreground">
+            <ul className="list-disc leading-loose ps-0 pe-4 list-inside space-y-1 text-muted-foreground">
               {usedSources.map((source, idx) => (
                 <li key={idx} className="font-naskh">{source}</li>
               ))}

@@ -67,10 +67,10 @@ export default function LoginPage() {
               disabled={isLoading}
             >
               {isLoading ? (
-                <Loader2 className="mr-2 h-5 w-5 animate-spin rtl-flip" />
+                <Loader2 className="me-2 h-5 w-5 animate-spin" />
               ) : (
                 <svg
-                  className="mr-2 -ml-1 w-5 h-5 ml-2 mr-0"
+                  className="me-2 w-5 h-5"
                   aria-hidden="true"
                   focusable="false"
                   data-prefix="fab"
