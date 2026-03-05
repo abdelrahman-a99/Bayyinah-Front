@@ -1,3 +1,6 @@
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/next';
+
 import type { Metadata } from "next";
 import { Noto_Kufi_Arabic, Noto_Naskh_Arabic } from "next/font/google";
 import "./globals.css";
@@ -35,6 +38,8 @@ export default function RootLayout({
         <AuthProvider>
           <TooltipProvider>
             {children}
+            <Analytics />
+            <SpeedInsights />
             <Toaster position="top-center" richColors />
           </TooltipProvider>
         </AuthProvider>
