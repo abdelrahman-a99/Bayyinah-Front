@@ -6,7 +6,6 @@ import { Noto_Kufi_Arabic, Noto_Naskh_Arabic } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Toaster } from "@/components/ui/sonner";
 
 const notoKufi = Noto_Kufi_Arabic({
   variable: "--font-kufi",
@@ -36,12 +35,7 @@ export default function RootLayout({
         className={`${notoKufi.variable} ${notoNaskh.variable} antialiased font-kufi text-foreground bg-background selection:bg-primary/30 min-h-screen`}
       >
         <AuthProvider>
-          <TooltipProvider>
-            {children}
-            <Analytics />
-            <SpeedInsights />
-            <Toaster position="top-center" richColors />
-          </TooltipProvider>
+          <TooltipProvider>{children}</TooltipProvider>
         </AuthProvider>
       </body>
     </html>

@@ -1,34 +1,15 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import { ConversationOut, MessageOut } from "@/lib/types";
 import { Sidebar } from "@/components/Sidebar";
 import { ChatArea } from "@/components/ChatArea";
 import { MessageInput } from "@/components/MessageInput";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Menu, Loader2, PanelRightOpen } from "lucide-react";
-import { toast } from "sonner";
+import { Menu, Loader2 } from "lucide-react";
 
 export default function ChatPage() {
   const router = useRouter();
@@ -43,11 +24,6 @@ export default function ChatPage() {
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [isAiTyping, setIsAiTyping] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
-
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
   if (!authLoading && !user) {
@@ -57,49 +33,18 @@ export default function ChatPage() {
 
   // Load conversations on mount
   useEffect(() => {
-    if (!user) {
-      setIsLoadingConversations(false);
-      setConversations([]);
-      setActiveId(null);
-      return;
-    }
-
-    console.log("ChatPage: Loading conversations for user", user.id);
-
-    const controller = new AbortController();
-
-    // Local safety: don't block the UI for more than 3s even if API is slow
-    const localSafety = setTimeout(() => {
-      setIsLoadingConversations(false);
-    }, 3000);
+    if (!user) return;
 
     setIsLoadingConversations(true);
-
-    api
-      .getConversations()
+    api.getConversations()
       .then((data) => {
-        if (controller.signal.aborted) return;
-        console.log("ChatPage: Conversations loaded", data.length);
         setConversations(data);
         if (data.length > 0 && !activeId) {
           setActiveId(data[0].id);
         }
       })
-      .catch((err) => {
-        if (controller.signal.aborted) return;
-        console.error("ChatPage: Failed to load conversations", err);
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) {
-          setIsLoadingConversations(false);
-          clearTimeout(localSafety);
-        }
-      });
-
-    return () => {
-      controller.abort();
-      clearTimeout(localSafety);
-    };
+      .catch(console.error)
+      .finally(() => setIsLoadingConversations(false));
   }, [user]); // exclude activeId to not loop
 
   // Load messages when activeId changes
@@ -110,8 +55,7 @@ export default function ChatPage() {
     }
 
     setIsLoadingMessages(true);
-    api
-      .getMessages(activeId)
+    api.getMessages(activeId)
       .then((data) => {
         setMessages(data);
       })
@@ -120,15 +64,6 @@ export default function ChatPage() {
   }, [activeId]);
 
   const handleNewConversation = async () => {
-    // If the current active conversation has no messages, just use it instead of creating a new one
-    if (activeId && messages.length === 0) {
-      if (typeof window !== "undefined") {
-        document.querySelector("textarea")?.focus();
-      }
-      setIsMobileSidebarOpen(false);
-      return;
-    }
-
     try {
       const newConv = await api.createConversation({ title: "محادثة جديدة" });
       setConversations([newConv, ...conversations]);
@@ -139,25 +74,27 @@ export default function ChatPage() {
     }
   };
 
-  const handleRenameConversation = async (id: string, newTitle: string) => {
-    if (!newTitle || !newTitle.trim()) return;
+  const handleRenameConversation = async (id: string) => {
+    const title = window.prompt("أدخل الاسم الجديد للمحادثة:");
+    if (!title || !title.trim()) return;
 
     try {
-      const updated = await api.updateConversation(id, {
-        title: newTitle.trim(),
-      });
-      setConversations(conversations.map((c) => (c.id === id ? updated : c)));
+      const updated = await api.updateConversation(id, { title: title.trim() });
+      setConversations(conversations.map(c => c.id === id ? updated : c));
     } catch (error) {
       console.error("Failed to rename conversation:", error);
     }
   };
 
   const handleDeleteConversation = async (id: string) => {
+    const confirmed = window.confirm("هل أنت متأكد من حذف هذه المحادثة بشكل دائم؟");
+    if (!confirmed) return;
+
     try {
       await api.deleteConversation(id);
-      setConversations(conversations.filter((c) => c.id !== id));
+      setConversations(conversations.filter(c => c.id !== id));
       if (activeId === id) {
-        const remaining = conversations.filter((c) => c.id !== id);
+        const remaining = conversations.filter(c => c.id !== id);
         setActiveId(remaining.length > 0 ? remaining[0].id : null);
       }
     } catch (error) {
@@ -174,8 +111,7 @@ export default function ChatPage() {
     if (!targetConvId) {
       try {
         // use the first words as title, up to 30 chars
-        const title =
-          content.substring(0, 30) + (content.length > 30 ? "..." : "");
+        const title = content.substring(0, 30) + (content.length > 30 ? "..." : "");
         const newConv = await api.createConversation({ title });
         setConversations([newConv, ...conversations]);
         targetConvId = newConv.id;
@@ -197,50 +133,37 @@ export default function ChatPage() {
       created_at: new Date().toISOString(),
     };
 
-    setMessages((prev) => [...prev, userMsg]);
+    setMessages(prev => [...prev, userMsg]);
     setIsAiTyping(true);
 
     try {
       const response = await api.sendMessage(targetConvId, { content });
       // Replace temp with actual, and add AI response
-      setMessages((prev) => [
-        ...prev.filter((m) => m.id !== tempId),
+      setMessages(prev => [
+        ...prev.filter(m => m.id !== tempId),
         response.user_message,
-        response.assistant_message,
+        response.assistant_message
       ]);
 
       // Update conversation title if this is the first message and it was just "محادثة جديدة"
-      const currentConv = conversations.find((c) => c.id === targetConvId);
-      if (
-        currentConv &&
-        currentConv.title === "محادثة جديدة" &&
-        messages.length === 0
-      ) {
-        const title =
-          content.substring(0, 30) + (content.length > 30 ? "..." : "");
-        api
-          .updateConversation(targetConvId, { title })
-          .then((updated) => {
-            setConversations((prev) =>
-              prev.map((c) => (c.id === targetConvId ? updated : c))
-            );
-          });
+      const currentConv = conversations.find(c => c.id === targetConvId);
+      if (currentConv && currentConv.title === "محادثة جديدة" && messages.length === 0) {
+        const title = content.substring(0, 30) + (content.length > 30 ? "..." : "");
+        api.updateConversation(targetConvId, { title }).then(updated => {
+          setConversations(prev => prev.map(c => c.id === targetConvId ? updated : c));
+        });
       }
     } catch (error: any) {
       console.error("Failed to send message:", error);
       // Remove the optimistic message on fail
-      setMessages((prev) => prev.filter((m) => m.id !== tempId));
-      toast.error(`عذراً، حدث خطأ: ${error.message}`);
+      setMessages(prev => prev.filter(m => m.id !== tempId));
+      alert(`عذراً، حدث خطأ: ${error.message}`);
     } finally {
       setIsAiTyping(false);
     }
   };
 
-  // Show a full-screen loader only if we have NO user and NO conversations cached
-  if (
-    authLoading ||
-    (isLoadingConversations && conversations.length === 0)
-  ) {
+  if (authLoading || isLoadingConversations) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -257,84 +180,34 @@ export default function ChatPage() {
       setIsMobileSidebarOpen(false);
     },
     onNew: handleNewConversation,
-    onDelete: (id: string) => setDeleteConfirmId(id),
+    onDelete: handleDeleteConversation,
     onRename: handleRenameConversation,
   };
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      {/* Desktop Sidebar — collapsible */}
-      <div
-        className="hidden md:flex flex-col h-full shrink-0 sidebar-transition overflow-hidden"
-        style={{ width: isSidebarOpen ? undefined : 0 }}
-      >
-        <div className="flex flex-col h-full w-72 lg:w-80">
-          <Sidebar
-            {...sidebarProps}
-            onToggle={() => setIsSidebarOpen(false)}
-          />
-        </div>
+      {/* Desktop Sidebar */}
+      <div className="hidden md:flex h-full z-10">
+        <Sidebar {...sidebarProps} />
       </div>
 
       {/* Main Chat Area */}
       <div className="flex flex-col flex-1 h-full min-w-0 relative">
-        {/* Top bar: toggle button (desktop collapsed) + mobile header */}
-        <div className="flex items-center gap-2 p-2 md:p-3 shrink-0 sticky top-0 z-20 bg-background/80 backdrop-blur border-b border-border/40 md:border-b-0">
-          {/* Desktop: sidebar toggle (only visible when sidebar is closed) */}
-          {!isSidebarOpen && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="hidden md:inline-flex h-9 w-9 cursor-pointer text-muted-foreground hover:text-foreground"
-              onClick={() => setIsSidebarOpen(true)}
-              aria-label="فتح القائمة الجانبية"
-            >
-              <PanelRightOpen className="h-5 w-5" />
-            </Button>
-          )}
+        {/* Mobile Header */}
+        <div className="md:hidden flex items-center justify-between p-3 border-b border-border/40 bg-background/80 backdrop-blur z-20 sticky top-0">
+          <Sheet open={isMobileSidebarOpen} onOpenChange={setIsMobileSidebarOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="text-foreground">
+                <Menu className="h-6 w-6" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="p-0 w-80 border-r-0" dir="rtl">
+              <Sidebar {...sidebarProps} />
+            </SheetContent>
+          </Sheet>
 
-          {/* Mobile: hamburger menu */}
-          <div className="md:hidden">
-            <Sheet
-              open={isMobileSidebarOpen}
-              onOpenChange={setIsMobileSidebarOpen}
-            >
-              <SheetTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-foreground h-9 w-9 cursor-pointer"
-                >
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent
-                side="right"
-                className="p-0 w-80 border-s-0 flex flex-col h-full"
-                dir="rtl"
-                showCloseButton={false}
-              >
-                <SheetHeader className="sr-only">
-                  <SheetTitle>القائمة الجانبية</SheetTitle>
-                  <SheetDescription>
-                    قائمة المحادثات السابقة وخيارات الحساب
-                  </SheetDescription>
-                </SheetHeader>
-                <Sidebar {...sidebarProps} />
-              </SheetContent>
-            </Sheet>
-          </div>
-
-          {/* Title — centered on mobile, hidden on desktop when sidebar is open */}
-          <div
-            className={`font-kufi font-bold text-base text-primary truncate flex-1 text-center md:text-start ${isSidebarOpen ? "md:hidden" : ""
-              }`}
-          >
-            قصص الأنبياء
-          </div>
-
-          {/* Spacer for mobile centering */}
-          <div className="w-9 md:hidden" />
+          <div className="font-kufi font-bold text-lg text-primary truncate">قصص الأنبياء</div>
+          <div className="w-10"></div> {/* Spacer for centering */}
         </div>
 
         {/* Messages Space */}
@@ -351,35 +224,10 @@ export default function ChatPage() {
             disabled={isAiTyping || isLoadingMessages}
           />
           <p className="text-center text-xs text-muted-foreground mt-3 font-naskh hidden md:block">
-            يقدم الوكيل إجابات مستندة إلى القرآن الكريم والسنة النبوية بإذن
-            الله
+            يقدم الوكيل إجابات مستندة إلى القرآن الكريم والسنة النبوية بإذن الله
           </p>
         </div>
       </div>
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deleteConfirmId} onOpenChange={() => setDeleteConfirmId(null)}>
-        <AlertDialogContent dir="rtl" className="font-naskh">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="font-kufi">حذف المحادثة</AlertDialogTitle>
-            <AlertDialogDescription>
-              هل أنت متأكد من حذف هذه المحادثة بشكل دائم؟ لا يمكن التراجع عن هذا الإجراء.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="gap-2 sm:justify-start">
-            <AlertDialogAction
-              className="bg-red-500! hover:bg-red-700! cursor-pointer"
-              onClick={() => {
-                if (deleteConfirmId) handleDeleteConversation(deleteConfirmId);
-                setDeleteConfirmId(null);
-              }}
-            >
-              حذف
-            </AlertDialogAction>
-            <AlertDialogCancel className="cursor-pointer border-border m-0">إلغاء</AlertDialogCancel>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
