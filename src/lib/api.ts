@@ -39,7 +39,8 @@ class ApiError extends Error {
 async function fetchWithAuth(
   endpoint: string,
   options: RequestInit = {},
-  accessTokenOverride?: string
+  accessTokenOverride?: string,
+  timeoutMs = 10000
 ): Promise<Response> {
   const token = accessTokenOverride ?? (await getAccessToken());
 
@@ -51,7 +52,7 @@ async function fetchWithAuth(
   }
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -136,10 +137,15 @@ export const api = {
     conversationId: string,
     data: MessageCreate
   ): Promise<ChatResponse> {
-    const res = await fetchWithAuth(`/conversations/${conversationId}/messages`, {
+    const res = await fetchWithAuth(
+      `/conversations/${conversationId}/messages`,
+      {
       method: "POST",
       body: JSON.stringify(data),
-    });
+      },
+      undefined,
+      120000
+    );
     return res.json();
   },
 };

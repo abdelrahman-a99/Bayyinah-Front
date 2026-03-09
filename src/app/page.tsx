@@ -196,9 +196,15 @@ export default function ChatPage() {
       console.error("Failed to send message:", error);
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
 
-      const message =
-        error instanceof Error ? error.message : "حدث خطأ غير متوقع";
-      toast.error(`عذراً، حدث خطأ: ${message}`);
+      let message = "حدث خطأ غير متوقع";
+
+      if (error instanceof DOMException && error.name === "AbortError") {
+        message = "استغرقت الاستجابة وقتاً أطول من المتوقع. يرجى إعادة المحاولة بعد قليل.";
+      } else if (error instanceof Error) {
+        message = error.message;
+      }
+
+      toast.error(`عذراً، ${message}`);
     } finally {
       setIsAiTyping(false);
     }
