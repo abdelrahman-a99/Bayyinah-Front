@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
               cookiesToSet.forEach(({ name, value, options }) =>
                 cookieStore.set(name, value, options)
               );
-            } catch (error) {
+            } catch {
               // Ignore if called from server component
             }
           },

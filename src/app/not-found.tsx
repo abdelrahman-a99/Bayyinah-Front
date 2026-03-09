@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { MoveRight, Home } from "lucide-react";
+// import { MoveRight, Home } from "lucide-react";
+import { Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function NotFound() {
@@ -17,7 +18,7 @@ export default function NotFound() {
             404
           </h1>
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            <span className="text-4xl font-bold bg-linear-to-r from-primary to-accent bg-clip-text text-transparent">
               تِهتَ في الطريق؟
             </span>
           </div>
@@ -49,7 +50,7 @@ export default function NotFound() {
 
         {/* Decorative Grid Pattern */}
         <div className="pt-12 opacity-10">
-          <div className="grid grid-cols-4 gap-4 max-w-[200px] mx-auto">
+          <div className="grid grid-cols-4 gap-4 max-w-50 mx-auto">
             {[...Array(8)].map((_, i) => (
               <div key={i} className="aspect-square rounded shadow-inner bg-primary" />
             ))}

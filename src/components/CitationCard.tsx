@@ -1,9 +1,21 @@
 import { useState } from "react";
-import { ChevronDown, ChevronUp, ExternalLink, ShieldCheck } from "lucide-react";
+import { ChevronDown, ChevronUp, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+interface CitationMetadata {
+  page?: string | number;
+  sura?: string;
+}
+
+interface CitationItem {
+  source_tier?: string;
+  document_name?: string;
+  content?: string;
+  metadata?: CitationMetadata;
+}
+
 interface CitationCardProps {
-  citations: any[];
+  citations: CitationItem[];
   usedSources: string[];
   confidenceScore: number;
   tierBreakdown: Record<string, number>;
@@ -71,7 +83,7 @@ export function CitationCard({
                     )}
                   </div>
                   <p className="font-naskh text-foreground/90 leading-relaxed text-sm my-2">
-                    "{cite.content}"
+                    &quot;{cite.content}&quot;
                   </p>
                   <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mt-2">
                     {cite.metadata?.page && <span>صفحة: {cite.metadata.page}</span>}

@@ -20,6 +20,18 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Helper: wait for a given number of milliseconds
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+type ErrorWithStatus = {
+  status?: number;
+  message?: string;
+};
+
+const getErrorStatus = (error: unknown): number | undefined => {
+  if (typeof error === "object" && error !== null && "status" in error) {
+    return (error as ErrorWithStatus).status;
+  }
+  return undefined;
+};
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [supabaseUser, setSupabaseUser] = useState<User | null>(null);
   const [user, setUser] = useState<UserOut | null>(null);
@@ -62,10 +74,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (!mountedRef.current) return;
             setUser(profile);
             return;
-          } catch (error: any) {
+          } catch (error: unknown) {
             lastError = error;
 
-            if (error?.status === 401 || error?.status === 403) {
+            const status = getErrorStatus(error);
+
+            if (status === 401 || status === 403) {
               const { user: backendUser } = await api.login(accessToken);
               if (!mountedRef.current) return;
               setUser(backendUser);
@@ -80,10 +94,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         throw lastError;
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("AuthProvider: failed to load backend profile", error);
 
-        if ((error?.status === 401 || error?.status === 403) && mountedRef.current) {
+        const status = getErrorStatus(error);
+
+        if ((status === 401 || status === 403) && mountedRef.current) {
           setUser(null);
           setApiAccessToken(null);
           await supabase.auth.signOut();

@@ -38,10 +38,10 @@ export function ChatArea({ messages, isLoading, isInitialLoading }: ChatAreaProp
 
         <div className="mt-8 grid gap-3 w-full max-w-lg">
           <div className="p-4 rounded-xl border border-border/50 bg-muted/30 text-right text-sm font-naskh text-muted-foreground hover:bg-muted/50 transition-colors cursor-default">
-            "ما هي معجزات النبي موسى عليه السلام؟"
+            &quot;ما هي معجزات النبي موسى عليه السلام؟&quot;
           </div>
           <div className="p-4 rounded-xl border border-border/50 bg-muted/30 text-right text-sm font-naskh text-muted-foreground hover:bg-muted/50 transition-colors cursor-default">
-            "حدثني عن قصة أصحاب الكهف والعبرة منها"
+            &quot;حدثني عن قصة أصحاب الكهف والعبرة منها&quot;
           </div>
         </div>
       </div>
@@ -58,7 +58,7 @@ export function ChatArea({ messages, isLoading, isInitialLoading }: ChatAreaProp
         {isLoading && (
           <div className="flex w-full justify-start mb-6 animate-fade-in">
             <div className="flex gap-4 flex-row">
-              <div className="flex-shrink-0 mt-1">
+              <div className="flex-0 mt-1">
                 <div className="w-8 h-8 rounded-full bg-secondary/20 flex items-center justify-center text-secondary-foreground shadow-sm">
                   <div className="flex gap-1">
                     <div className="w-1.5 h-1.5 rounded-full bg-secondary-foreground/60 animate-bounce" style={{ animationDelay: "0ms" }} />

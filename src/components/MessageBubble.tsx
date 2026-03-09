@@ -16,7 +16,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
           }`}
       >
         {/* Avatar */}
-        <div className="flex-shrink-0 mt-1">
+        <div className="flex-0 mt-1">
           {isUser ? (
             <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary shadow-sm border border-primary/20">
               <User className="w-4 h-4" />
@@ -39,7 +39,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
                 : "bg-card border border-border text-card-foreground rounded-tr-sm"
               }`}
           >
-            <div className="whitespace-pre-wrap break-words">{message.content}</div>
+            <div className="whitespace-pre-wrap wrap-break-word">{message.content}</div>
           </div>
 
           {/* Assistant Metadata / Citations */}

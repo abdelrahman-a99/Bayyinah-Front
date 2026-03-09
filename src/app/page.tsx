@@ -155,11 +155,13 @@ export default function ChatPage() {
           setConversations(prev => prev.map(c => c.id === targetConvId ? updated : c));
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to send message:", error);
       // Remove the optimistic message on fail
       setMessages(prev => prev.filter(m => m.id !== tempId));
-      alert(`عذراً، حدث خطأ: ${error.message}`);
+
+      const message = error instanceof Error ? error.message : "حدث خطأ غير متوقع";
+      alert(`عذراً، حدث خطأ: ${message}`);
     } finally {
       setIsAiTyping(false);
     }
@@ -228,7 +230,7 @@ export default function ChatPage() {
         />
 
         {/* Input Area */}
-        <div className="p-3 md:p-6 bg-gradient-to-t from-background via-background to-transparent shrink-0">
+        <div className="p-3 md:p-6 bg-linear-to-t from-background via-background to-transparent shrink-0">
           <MessageInput
             onSend={handleSendMessage}
             disabled={isAiTyping || isLoadingMessages}

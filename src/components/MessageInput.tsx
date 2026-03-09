@@ -46,7 +46,7 @@ export function MessageInput({ onSend, disabled }: MessageInputProps) {
         onKeyDown={handleKeyDown}
         placeholder="اسأل عن قصص الأنبياء..."
         disabled={disabled}
-        className="min-h-[44px] max-h-[200px] border-0 focus-visible:ring-0 resize-none font-naskh text-base py-3 px-4 shadow-none bg-transparent"
+        className="min-h-11 max-h-50 border-0 focus-visible:ring-0 resize-none font-naskh text-base py-3 px-4 shadow-none bg-transparent"
         dir="rtl"
         rows={1}
       />

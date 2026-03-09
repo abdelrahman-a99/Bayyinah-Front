@@ -17,8 +17,9 @@ export default function LoginPage() {
     try {
       await signInWithGoogle();
       // the redirect is handled by supabase OAuth which will take us to /auth/callback
-    } catch (err: any) {
-      setError(err.message || "حدث خطأ أثناء تسجيل الدخول");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "حدث خطأ أثناء تسجيل الدخول";
+      setError(message);
       setIsLoading(false);
     }
   };
@@ -70,7 +71,7 @@ export default function LoginPage() {
                 <Loader2 className="mr-2 h-5 w-5 animate-spin rtl-flip" />
               ) : (
                 <svg
-                  className="mr-2 -ml-1 w-5 h-5 ml-2 mr-0"
+                  className="mr-2 w-5 h-5"
                   aria-hidden="true"
                   focusable="false"
                   data-prefix="fab"
