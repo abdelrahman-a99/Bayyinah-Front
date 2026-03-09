@@ -12,6 +12,23 @@ import {
 
 const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/+$/, "");
 
+let cachedAccessToken: string | null = null;
+
+export function setApiAccessToken(token: string | null) {
+  cachedAccessToken = token;
+}
+
+async function getAccessToken(): Promise<string | null> {
+  if (cachedAccessToken) return cachedAccessToken;
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  cachedAccessToken = session?.access_token ?? null;
+  return cachedAccessToken;
+}
+
 class ApiError extends Error {
   constructor(public status: number, message: string) {
     super(message);
@@ -21,17 +38,16 @@ class ApiError extends Error {
 
 async function fetchWithAuth(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  accessTokenOverride?: string
 ): Promise<Response> {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  const token = accessTokenOverride ?? (await getAccessToken());
 
   const headers = new Headers(options.headers);
   headers.set("Content-Type", "application/json");
 
-  if (session?.access_token) {
-    headers.set("Authorization", `Bearer ${session.access_token}`);
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
   }
 
   const controller = new AbortController();
@@ -45,6 +61,10 @@ async function fetchWithAuth(
     });
 
     if (!response.ok) {
+      if (response.status === 401) {
+        cachedAccessToken = null;
+      }
+
       const errorData = await response.json().catch(() => ({}));
       throw new ApiError(
         response.status,
@@ -62,14 +82,16 @@ export const api = {
   // Auth
   async login(access_token: string): Promise<LoginResponse> {
     const res = await fetchWithAuth("/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ access_token }),
-    });
+        method: "POST",
+        body: JSON.stringify({ access_token }),
+      },
+      access_token
+    );
     return res.json();
   },
 
-  async getMe(): Promise<UserOut> {
-    const res = await fetchWithAuth("/auth/me");
+  async getMe(accessToken?: string): Promise<UserOut> {
+    const res = await fetchWithAuth("/auth/me", undefined, accessToken);
     return res.json();
   },
 

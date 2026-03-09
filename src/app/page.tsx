@@ -26,7 +26,10 @@ export default function ChatPage() {
 
   // Load conversations on mount
   useEffect(() => {
-    if (!user) {
+    if (!user?.id) {
+      setConversations([]);
+      setActiveId(null);
+      setMessages([]);
       setIsLoadingConversations(false);
       return;
     }
@@ -35,13 +38,16 @@ export default function ChatPage() {
     api.getConversations()
       .then((data) => {
         setConversations(data);
-        if (data.length > 0 && !activeId) {
-          setActiveId(data[0].id);
-        }
+        setActiveId((currentActiveId) => {
+          if (currentActiveId && data.some((conversation) => conversation.id === currentActiveId)) {
+            return currentActiveId;
+          }
+          return data.length > 0 ? data[0].id : null;
+        });
       })
       .catch(console.error)
       .finally(() => setIsLoadingConversations(false));
-  }, [user]); // exclude activeId to not loop
+  }, [user?.id]);
 
   // Load messages when activeId changes
   useEffect(() => {

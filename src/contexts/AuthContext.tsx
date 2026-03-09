@@ -1,9 +1,9 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
-import { api } from "@/lib/api";
+import { api, setApiAccessToken } from "@/lib/api";
 import { UserOut } from "@/lib/types";
 import { useRouter } from "next/navigation";
 
@@ -26,94 +26,142 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // 1. Initial mounting and session checking
-  useEffect(() => {
-    console.log("AuthProvider: Initializing...");
-    let mounted = true;
+  const mountedRef = useRef(true);
+  const userRef = useRef<UserOut | null>(null);
+  const isFetchingProfileRef = useRef(false);
 
-    // Initial session check
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!mounted) return;
-      console.log("AuthProvider: Session retrieved", !!session);
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
+
+  const fetchAndSetProfile = useCallback(
+    async (
+      accessToken: string,
+      options?: {
+        silent?: boolean;
+        maxRetries?: number;
+      }
+    ) => {
+      const { silent = false, maxRetries = 2 } = options ?? {};
+
+      if (isFetchingProfileRef.current) return;
+
+      isFetchingProfileRef.current = true;
+      setApiAccessToken(accessToken);
+
+      if (!silent) {
+        setLoading(true);
+      }
+
+      let lastError: unknown = null;
+
+      try {
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+          try {
+            const profile = await api.getMe(accessToken);
+            if (!mountedRef.current) return;
+            setUser(profile);
+            return;
+          } catch (error: any) {
+            lastError = error;
+
+            if (error?.status === 401 || error?.status === 403) {
+              const { user: backendUser } = await api.login(accessToken);
+              if (!mountedRef.current) return;
+              setUser(backendUser);
+              return;
+            }
+
+            if (attempt < maxRetries) {
+              await wait(attempt * 750);
+              continue;
+            }
+          }
+        }
+
+        throw lastError;
+      } catch (error: any) {
+        console.error("AuthProvider: failed to load backend profile", error);
+
+        if ((error?.status === 401 || error?.status === 403) && mountedRef.current) {
+          setUser(null);
+          setApiAccessToken(null);
+          await supabase.auth.signOut();
+          return;
+        }
+      } finally {
+        isFetchingProfileRef.current = false;
+        if (mountedRef.current) {
+          setLoading(false);
+        }
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    mountedRef.current = true;
+
+    const initialize = async () => {
+      console.log("AuthProvider: Initializing...");
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!mountedRef.current) return;
 
       setSupabaseUser(session?.user ?? null);
-      if (session?.user && session?.access_token) {
-        fetchAndSetProfile(session.access_token);
+      setApiAccessToken(session?.access_token ?? null);
+
+      if (session?.access_token) {
+        await fetchAndSetProfile(session.access_token);
       } else {
         setLoading(false);
       }
-    });
+    };
 
+    void initialize();
+
+    
     // 2. Listen to auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!mounted) return;
+      if (!mountedRef.current) return;
+
       console.log("AuthProvider: Auth event", event);
       setSupabaseUser(session?.user ?? null);
+      setApiAccessToken(session?.access_token ?? null);
 
-      if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session?.access_token) {
-        setLoading((prev) => {
-          if (!user && !prev) return true;
-          return prev;
-        });
-        await fetchAndSetProfile(session.access_token);
-      } else if (event === "SIGNED_OUT") {
+      if (event === "SIGNED_OUT") {
         setUser(null);
         setLoading(false);
-        router.push("/login");
+        router.replace("/login");
+        return;
+      }
+
+      if (!session?.access_token) {
+        return;
+      }
+
+      if (event === "SIGNED_IN") {
+        await fetchAndSetProfile(session.access_token);
+        return;
+      }
+
+      if (event === "TOKEN_REFRESHED") {
+        if (!userRef.current) {
+          await fetchAndSetProfile(session.access_token, { silent: true, maxRetries: 1 });
+        }
+        return;
       }
     });
 
     return () => {
-      mounted = false;
+      mountedRef.current = false;
       subscription.unsubscribe();
     };
-  }, [router]); // Stable array
-
-  const fetchAndSetProfile = async (accessToken: string, maxRetries = 3) => {
-    try {
-      for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-          console.log(`AuthProvider: Fetching profile (attempt ${attempt}/${maxRetries})...`);
-
-          // First try to get existing profile
-          try {
-            const profile = await api.getMe();
-            console.log("AuthProvider: Profile loaded successfully");
-            setUser(profile);
-            return; // Success! Exit the retry loop
-          } catch (e: any) {
-            // If 401 or 403, we might need to login/register first with the backend
-            if (e.status === 401 || e.status === 403) {
-              const { user: newUser } = await api.login(accessToken);
-              console.log("AuthProvider: Login successful");
-              setUser(newUser);
-              return; // Success! Exit the retry loop
-            } else {
-              throw e; // Network errors, 500s, etc. -> retry
-            }
-          }
-        } catch (error) {
-          console.warn(`AuthProvider: Attempt ${attempt} failed:`, error);
-
-          if (attempt < maxRetries) {
-            // Wait before retrying (5s, 10s, etc.)
-            const delayMs = attempt * 5000;
-            console.log(`AuthProvider: Retrying in ${delayMs / 1000}s...`);
-            await wait(delayMs);
-          } else {
-            // All retries exhausted
-            console.error("AuthProvider: All retries exhausted. Signing out.");
-            setUser(null);
-            await supabase.auth.signOut();
-          }
-        }
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [fetchAndSetProfile, router]);
 
   const signInWithGoogle = async () => {
     try {
@@ -132,6 +180,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
+      setApiAccessToken(null);
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
     } catch (error) {
