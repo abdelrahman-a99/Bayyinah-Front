@@ -175,6 +175,26 @@ export const api = {
     const decoder = new TextDecoder();
     let buffer = "";
 
+    const processEventBlock = (block: string) => {
+      const lines = block.split(/\r?\n/);
+      const dataLines: string[] = [];
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith("data:")) continue;
+        dataLines.push(trimmed.slice(5).trim());
+      }
+
+      if (dataLines.length === 0) return;
+
+      const jsonText = dataLines.join("\n");
+      if (!jsonText) return;
+
+      console.log("SSE event raw:", jsonText);
+
+      handlers.onEvent(JSON.parse(jsonText) as StreamEvent);
+    };
+
     while (true) {
       const { value, done } = await reader.read();
       if (done) break;
@@ -183,8 +203,13 @@ export const api = {
 
       // const lines = buffer.split("\n");
       // buffer = lines.pop() ?? "";
-      const events = buffer.split("\n\n");
-      buffer = events.pop() ?? "";
+
+      // const events = buffer.split("\n\n");
+      // buffer = events.pop() ?? "";
+
+      const normalized = buffer.replace(/\r\n/g, "\n");
+      const parts = normalized.split("\n\n");
+      buffer = parts.pop() ?? "";
 
       //   for (const line of lines) {
       //     const trimmed = line.trim();
@@ -192,33 +217,45 @@ export const api = {
       //     handlers.onEvent(JSON.parse(trimmed) as StreamEvent);
       //   }
       // }
-      for (const rawEvent of events) {
-        const lines = rawEvent.split("\n");
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed.startsWith("data:")) continue;
 
-          const jsonPart = trimmed.slice(5).trim();
-          if (!jsonPart) continue;
+      // for (const rawEvent of events) {
+      //   const lines = rawEvent.split("\n");
+      //   for (const line of lines) {
+      //     const trimmed = line.trim();
+      //     if (!trimmed.startsWith("data:")) continue;
 
-          handlers.onEvent(JSON.parse(jsonPart) as StreamEvent);
-        }
+      //     const jsonPart = trimmed.slice(5).trim();
+      //     if (!jsonPart) continue;
+
+      //     handlers.onEvent(JSON.parse(jsonPart) as StreamEvent);
+      //   }
+      // }
+
+      for (const part of parts) {
+        const trimmed = part.trim();
+        if (!trimmed) continue;
+        processEventBlock(trimmed);
       }
     }
 
-    const trailing = buffer.trim();
+    // const trailing = buffer.trim();
+    // if (trailing) {
+    //   // handlers.onEvent(JSON.parse(trailing) as StreamEvent);
+    //   const lines = trailing.split("\n");
+    //   for (const line of lines) {
+    //     const trimmed = line.trim();
+    //     if (!trimmed.startsWith("data:")) continue;
+
+    //     const jsonPart = trimmed.slice(5).trim();
+    //     if (!jsonPart) continue;
+
+    //     handlers.onEvent(JSON.parse(jsonPart) as StreamEvent);
+    //   }
+    // }
+
+    const trailing = buffer.replace(/\r\n/g, "\n").trim();
     if (trailing) {
-      // handlers.onEvent(JSON.parse(trailing) as StreamEvent);
-      const lines = trailing.split("\n");
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed.startsWith("data:")) continue;
-
-        const jsonPart = trimmed.slice(5).trim();
-        if (!jsonPart) continue;
-
-        handlers.onEvent(JSON.parse(jsonPart) as StreamEvent);
-      }
+      processEventBlock(trailing);
     }
   }
 };
