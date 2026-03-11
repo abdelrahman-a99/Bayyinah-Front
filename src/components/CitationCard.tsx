@@ -36,7 +36,7 @@ export function CitationCard({
   if (!citations?.length && !usedSources?.length) return null;
 
   return (
-    <div className="mt-4 border border-border/50 rounded-lg overflow-hidden bg-muted/20 text-sm">
+    <div className="mt-2 border border-border/50 rounded-lg overflow-hidden bg-muted/20 text-sm">
       <div
         className="flex items-center justify-between p-3 cursor-pointer hover:bg-muted/40 transition-colors"
         onClick={() => setIsExpanded(!isExpanded)}

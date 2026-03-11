@@ -66,7 +66,7 @@ export function ChatArea({ messages, isLoading, isInitialLoading, onSuggestedQue
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 md:p-6 chat-scrollbar space-y-2">
+    <div className="flex-1 overflow-y-auto px-4 pt-3 pb-2 md:px-6 md:pt-4 md:pb-3 chat-scrollbar space-y-2">
       <div className="max-w-4xl mx-auto w-full">
         {messages.map((msg) => (
           <MessageBubble key={msg.id} message={msg} />

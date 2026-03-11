@@ -512,64 +512,61 @@ export default function ChatPage() {
 
       {/* Main Chat Area */}
       <div className="flex flex-col flex-1 h-full min-w-0 relative">
-        {/* Top Bar */}
-        <div className="flex items-center gap-2 p-2 md:p-3 shrink-0 sticky top-0 z-20 bg-background/80 backdrop-blur border-b border-border/40 md:border-b-0">
-          {!isSidebarOpen && (
+        {/* Mobile Top Bar */}
+        <div className="md:hidden flex items-center gap-2 p-2 shrink-0 bg-background/80 backdrop-blur border-b border-border/40">
+          <Sheet
+            open={isMobileSidebarOpen}
+            onOpenChange={setIsMobileSidebarOpen}
+          >
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-foreground h-9 w-9 cursor-pointer"
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+
+            <SheetContent
+              side="right"
+              className="p-0 w-80 border-s-0 flex flex-col h-full"
+              dir="rtl"
+              showCloseButton={false}
+            >
+              <VisuallyHidden asChild>
+                <SheetTitle>القائمة الجانبية</SheetTitle>
+              </VisuallyHidden>
+              <VisuallyHidden asChild>
+                <SheetDescription>
+                  قائمة المحادثات السابقة وخيارات الحساب
+                </SheetDescription>
+              </VisuallyHidden>
+              <Sidebar {...sidebarProps} />
+            </SheetContent>
+          </Sheet>
+
+          <div className="font-kufi font-bold text-base text-primary truncate flex-1 text-center">
+            بَيِّنَة
+          </div>
+
+          <div className="w-9" />
+        </div>
+
+        {/* Desktop Floating Sidebar Toggle */}
+        {!isSidebarOpen && (
+          <div className="hidden md:block absolute top-3 right-3 z-20">
             <Button
               variant="ghost"
               size="icon"
-              className="hidden md:inline-flex h-9 w-9 cursor-pointer text-muted-foreground hover:text-foreground"
+              className="h-9 w-9 cursor-pointer text-muted-foreground hover:text-foreground"
               onClick={() => setIsSidebarOpen(true)}
               aria-label="فتح القائمة الجانبية"
             >
               <PanelRightOpen className="h-5 w-5" />
             </Button>
-          )}
-
-          <div className="md:hidden">
-            <Sheet
-              open={isMobileSidebarOpen}
-              onOpenChange={setIsMobileSidebarOpen}
-            >
-              <SheetTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-foreground h-9 w-9 cursor-pointer"
-                >
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-
-              <SheetContent
-                side="right"
-                className="p-0 w-80 border-s-0 flex flex-col h-full"
-                dir="rtl"
-                showCloseButton={false}
-              >
-                <VisuallyHidden asChild>
-                  <SheetTitle>القائمة الجانبية</SheetTitle>
-                </VisuallyHidden>
-                <VisuallyHidden asChild>
-                  <SheetDescription>
-                    قائمة المحادثات السابقة وخيارات الحساب
-                  </SheetDescription>
-                </VisuallyHidden>
-                <Sidebar {...sidebarProps} />
-              </SheetContent>
-            </Sheet>
           </div>
-
-          <div
-            className={`font-kufi font-bold text-base text-primary truncate flex-1 text-center md:text-start ${
-              isSidebarOpen ? "md:hidden" : ""
-            }`}
-          >
-            بَيِّنَة
-          </div>
-
-          <div className="w-9 md:hidden" />
-        </div>
+        )}
 
         {/* Messages Space */}
         <ChatArea
@@ -582,12 +579,12 @@ export default function ChatPage() {
         />
 
         {/* Input Area */}
-        <div className="p-3 md:p-6 bg-linear-to-t from-background via-background to-transparent shrink-0">
+        <div className="px-3 pt-2 pb-3 md:px-6 md:pt-2 md:pb-2 bg-linear-to-t from-background via-background to-transparent shrink-0">
           <MessageInput
             onSend={handleSendMessage}
             disabled={isAiTyping || isLoadingMessages || backendUnavailable || !user?.id}
           />
-          <p className="text-center text-xs text-muted-foreground mt-3 font-naskh hidden md:block">
+          <p className="text-center text-xs text-muted-foreground mt-2 font-naskh hidden md:block">
             يقدم الوكيل إجابات مستندة إلى القرآن الكريم والسنة النبوية بإذن الله
           </p>
         </div>
