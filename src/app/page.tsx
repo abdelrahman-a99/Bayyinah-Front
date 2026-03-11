@@ -224,8 +224,9 @@ export default function ChatPage() {
 
     if (!targetConvId) {
       try {
-        const title =
-          content.substring(0, 30) + (content.length > 30 ? "..." : "");
+        // const title =
+        //   content.substring(0, 30) + (content.length > 30 ? "..." : "");
+        const title = content.trim().substring(0, 200);
         const newConv = await api.createConversation({ title });
         setConversations((prev) => [newConv, ...prev]);
         targetConvId = newConv.id;
@@ -375,8 +376,9 @@ export default function ChatPage() {
       });
 
       if (wasNewConversation || shouldRenameAfterFirstMessage) {
-        const title =
-          content.substring(0, 30) + (content.length > 30 ? "..." : "");
+        // const title =
+        //   content.substring(0, 30) + (content.length > 30 ? "..." : "");
+        const title = content.trim().substring(0, 200);
 
         api.updateConversation(targetConvId, { title }).then((updated) => {
           setConversations((prev) =>
@@ -574,6 +576,9 @@ export default function ChatPage() {
           messages={messages}
           isLoading={isAiTyping}
           isInitialLoading={isLoadingMessages}
+          onSuggestedQuestionClick={(question) => {
+            void handleSendMessage(question);
+          }}
         />
 
         {/* Input Area */}

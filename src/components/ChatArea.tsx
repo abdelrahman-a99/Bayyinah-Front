@@ -8,9 +8,10 @@ interface ChatAreaProps {
   messages: MessageOut[];
   isLoading: boolean;
   isInitialLoading?: boolean;
+  onSuggestedQuestionClick?: (question: string) => void;
 }
 
-export function ChatArea({ messages, isLoading, isInitialLoading }: ChatAreaProps) {
+export function ChatArea({ messages, isLoading, isInitialLoading, onSuggestedQuestionClick }: ChatAreaProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const hasStreamingAssistant = messages.some(
@@ -44,12 +45,21 @@ export function ChatArea({ messages, isLoading, isInitialLoading }: ChatAreaProp
         </p>
 
         <div className="mt-8 flex flex-col md:flex-row flex-wrap justify-center gap-3 w-full max-w-2xl px-4">
-          <div className="px-5 py-3 rounded-full border border-border/50 text-center text-sm font-naskh text-muted-foreground hover:bg-muted/30 hover:text-foreground transition-colors cursor-pointer shadow-sm">
-            &quot;ما هي معجزات النبي موسى عليه السلام؟&quot;
-          </div>
-          <div className="px-5 py-3 rounded-full border border-border/50 text-center text-sm font-naskh text-muted-foreground hover:bg-muted/30 hover:text-foreground transition-colors cursor-pointer shadow-sm">
-            &quot;حدثني عن قصة أصحاب الكهف والعبرة منها&quot;
-          </div>
+          <button
+            type="button"
+            onClick={() => onSuggestedQuestionClick?.("ما هي معجزات النبي موسى عليه السلام؟")}
+            className="px-5 py-3 rounded-full border border-border/50 text-center text-sm font-naskh text-muted-foreground hover:bg-muted/30 hover:text-foreground transition-all duration-150 ease-out active:scale-[0.98] active:brightness-95 cursor-pointer shadow-sm"
+          >
+            ما هي معجزات النبي موسى عليه السلام؟
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onSuggestedQuestionClick?.("حدثني عن قصة أصحاب الكهف والعبرة منها")}
+            className="px-5 py-3 rounded-full border border-border/50 text-center text-sm font-naskh text-muted-foreground hover:bg-muted/30 hover:text-foreground transition-all duration-150 ease-out active:scale-[0.98] active:brightness-95 cursor-pointer shadow-sm"
+          >
+            حدثني عن قصة أصحاب الكهف والعبرة منها
+          </button>
         </div>
       </div>
     );
