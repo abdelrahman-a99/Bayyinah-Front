@@ -74,15 +74,16 @@ export function ChatArea({ messages, isLoading, isInitialLoading, onSuggestedQue
 
         {isLoading && !hasStreamingAssistant && (
           <div className="flex w-full justify-start mb-6 animate-fade-in">
-            <div className="flex gap-4 flex-row">
-              <div className="flex-0 mt-1">
-                <div className="w-8 h-8 rounded-full bg-secondary/20 flex items-center justify-center text-secondary-foreground shadow-sm">
-                  <div className="flex gap-1">
-                    <div className="w-1.5 h-1.5 rounded-full bg-secondary-foreground/60 animate-bounce" style={{ animationDelay: "0ms" }} />
-                    <div className="w-1.5 h-1.5 rounded-full bg-secondary-foreground/60 animate-bounce" style={{ animationDelay: "150ms" }} />
-                    <div className="w-1.5 h-1.5 rounded-full bg-secondary-foreground/60 animate-bounce" style={{ animationDelay: "300ms" }} />
-                  </div>
+            <div className="flex items-center gap-3">
+              <div className="mt-1">
+                <div className="book-loading-shell">
+                  <span className="book-loading-shine" />
+                  <BookOpenText className="book-loading-icon" />
                 </div>
+              </div>
+
+              <div className="text-sm md:text-base font-kufi text-muted-foreground animate-pulse">
+                  جارٍ البحث في المصادر وإعداد الإجابة...
               </div>
             </div>
           </div>
