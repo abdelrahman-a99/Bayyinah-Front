@@ -172,7 +172,7 @@ export function Sidebar({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className={`h-7 w-7 shrink-0 cursor-pointer text-muted-foreground hover:text-foreground hover:bg-transparent! focus:bg-transparent! data-[state=open]:bg-transparent! focus:ring-0 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-colors ${activeId === conv.id ? "opacity-100" : ""
+                      className={`h-7 w-7 shrink-0 cursor-pointer text-muted-foreground hover:text-foreground hover:bg-transparent! focus:bg-transparent! data-[state=open]:bg-transparent! focus:ring-0 opacity-0 group-hover:opacity-100 data-[state=open]:opacity-100 transition-opacity ${activeId === conv.id ? "opacity-100" : ""
                         }`}
                     >
                       <MoreVertical className="h-4 w-4" />
