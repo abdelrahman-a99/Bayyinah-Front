@@ -52,8 +52,8 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         >
           <div
             className={`px-5 py-3.5 rounded-2xl shadow-sm text-base leading-relaxed font-naskh ${isUser
-              ? "bg-primary text-primary-foreground rounded-ss-sm shadow-md"
-              : "bg-card border border-border text-card-foreground rounded-se-sm"
+              ? "bg-primary text-primary-foreground rounded-ss-sm shadow-md selection:bg-white/85 selection:text-slate-900"
+              : "bg-card border border-border text-card-foreground rounded-se-sm selection:bg-primary/20 selection:text-foreground"
               }`}
           >
             <div className="whitespace-pre-wrap wrap-break-word">
